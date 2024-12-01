@@ -1,0 +1,26 @@
+fn main() {
+    a, b := []int{}, []int{}
+    n1, n2 := 0, 0
+
+    for scanf("%lld %lld", &n1, &n2) == 2 {
+        a = append(a, n1)
+        b = append(b, n2)
+    }
+
+    sort(a, true)
+    sort(b, true)
+
+    sum := 0
+    counts := map[int]int{}
+    for i in a {
+        sum += trunc(fabs(b[i] - a[i]))
+        counts[b[i]]++
+    }
+    printf("Part 1: %d\n", sum)
+
+    sim := 0
+    for i in a {
+        sim += a[i]*counts[a[i]]
+    }
+    printf("Part 2: %d\n", sim)
+}
