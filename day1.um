@@ -1,8 +1,10 @@
-fn main() {
-    a, b := []int{}, []int{}
-    n1, n2 := 0, 0
+import "std.um"
 
-    for scanf("%lld %lld", &n1, &n2) == 2 {
+fn main() {
+    t := std::clock()
+    a, b := []int{}, []int{}
+    
+    for n1, n2 := 0, 0; scanf("%lld %lld", &n1, &n2) == 2 {
         a = append(a, n1)
         b = append(b, n2)
     }
@@ -16,11 +18,11 @@ fn main() {
         sum += trunc(fabs(b[i] - a[i]))
         counts[b[i]]++
     }
-    printf("Part 1: %d\n", sum)
+    printf("Part 1: %d %gs\n", sum, std::clock() - t)
 
     sim := 0
     for i in a {
         sim += a[i]*counts[a[i]]
     }
-    printf("Part 2: %d\n", sim)
+    printf("Part 2: %d %gs\n", sim, std::clock() - t)
 }
