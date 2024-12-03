@@ -1,0 +1,105 @@
+import "std.um"
+
+fn splitBy*(text: str, by: char): []str {
+  items := []str{}
+  last := 0
+  for i, c in text {
+    if c == by {
+      items = append(items, slice(text, last, i))
+      last = i+1 // Skip the character by adding one.
+    }
+  }
+  items = append(items, slice(text, last))
+  return items
+}
+
+fn variations(level: []int): [][]int {
+    variations := [][]int{}
+    for i := 0; i < len(level); i++ {
+        variations = append(variations, delete(copy(level), i))
+    }
+    printf("src: %v\n", level)
+    printf("variations: %v\n", variations)
+    return variations
+}
+
+fn isvalid(level: []int): bool {
+    last := -1
+    dir := 0
+
+    for i, v in level {
+        if last == -1 {
+            last = v
+        } else {
+            if fabs(v - last) > 3 {
+                return false
+            }
+
+            newdir := 0
+            if v > last {
+                newdir = 1
+            } else if v < last {
+                newdir = -1
+            } else if v == last {
+                return false
+            }
+
+            if dir == 0 {
+                dir = newdir
+            } else if newdir != dir {
+                return false
+            }
+
+            last = v
+        }
+    }
+
+    return true
+}
+
+fn main() {
+    lines := []str{}
+    s := ""
+    for c := std::getchar(); c != '\0'; c = std::getchar() {
+        if c == '\n' {
+            lines = append(lines, s)
+            s = ""
+        } else {
+            s += c
+        }
+    }
+    lines = append(lines, s)
+
+    levels := [][]int{}
+
+    for i, line in lines {
+        level := []int{}
+        strs := splitBy(line, ' ')
+        for i, n in strs {
+            level = append(level, std::atoi(n))
+        }
+
+        levels = append(levels, level)
+    }
+
+    safe1, safe2 := 0, 0
+
+    for _, l in levels {
+        if isvalid(l) {
+            safe1++
+            safe2++
+        } else {
+            vs := variations(l)
+
+            for i, v in vs {
+                if isvalid(v) {
+                    safe2++
+                    break
+                }
+            }
+        }
+    }
+
+    printf("Part 1: %v\n", safe1)
+    printf("Part 2: %v\n", safe2)
+}

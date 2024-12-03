@@ -1,0 +1,87 @@
+import "std.um"
+
+type Instr = struct {
+    op: str
+    args: []int
+}
+
+fn tryparsenum(s: str): (int, int) {
+    for i, c in s {
+        if c < '0' || c > '9' {
+            return std::atoi(slice(s, 0, i)), i
+        }
+    }
+
+    return 0, 0
+}
+
+fn startswith(s: str, prefix: str): bool {
+    return len(s) >= len(prefix) && slice(s, 0, len(prefix)) == prefix
+}
+
+fn tryparse(s: str): (Instr, bool) {
+    if startswith(s, "mul(") {
+        s = slice(s, 4)
+        num, i := tryparsenum(s)
+        if i == 0 {
+            return {}, false
+        }
+        s = slice(s, i)
+        if s[0] != ',' {
+            return {}, false
+        }
+        s = slice(s, 1)
+        num2, i := tryparsenum(s)
+        if i == 0 {
+            return {}, false
+        }
+        s = slice(s, i)
+        if s[0] != ')' {
+            return {}, false
+        }
+        
+        return {op: "mul", args: {num, num2}}, true
+    } else if startswith(s, "don't()") {
+        return {op: "don't"}, true
+    } else if startswith(s, "do()") {
+        return {op: "do"}, true
+    }
+
+    return {}, false
+}
+
+fn main() {
+    data := ""
+
+    for c := std::getchar(); c != '\0'; c = std::getchar() {
+        data += c
+    }
+
+    instrs := []Instr{}
+
+    for i := 0; i < len(data); i++ {
+        s := slice(data, i)
+        instr, ok := tryparse(s)
+        if ok {
+            instrs = append(instrs, instr)
+        }
+    }
+
+    part1 := 0
+    part2 := 0
+
+    do := true
+    for i, instr in instrs {
+        if instr.op == "mul" {
+            part1 += instr.args[0] * instr.args[1]
+            if do { part2 += instr.args[0] * instr.args[1] }
+        } else if instr.op == "do" {
+            do = true
+        } else if instr.op == "don't" {
+            do = false
+        }
+    }
+
+    printf("Part 1: %v\n", part1)
+    printf("Part 2: %v\n", part2)
+}
