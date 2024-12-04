@@ -1,0 +1,59 @@
+import "std.um"
+
+fn main() {
+    lines := []str{}
+
+    for l := ""; scanf("%s", &l) == 1 {
+        lines = append(lines, l)
+    }
+
+    width, height := len(lines[0]), len(lines)
+
+    score := 0
+
+    // hor
+    for x := 0; x <= width-4; x++ {
+        for y := 0; y < height; y++ {
+            s := ""+lines[y][x+0]+lines[y][x+1]+lines[y][x+2]+lines[y][x+3]
+            score += int(s == "XMAS" || s == "SAMX")
+        }
+    }
+
+    // ver
+    for x := 0; x < width; x++ {
+        for y := 0; y <= height-4; y++ {
+            s := ""+lines[y+0][x]+lines[y+1][x]+lines[y+2][x]+lines[y+3][x]
+            score += int(s == "XMAS" || s == "SAMX")
+        }
+    }
+
+    // diag \
+    for x := 0; x <= width-4; x++ {
+        for y := 0; y <= height-4; y++ {
+            s := ""+lines[y+0][x+0]+lines[y+1][x+1]+lines[y+2][x+2]+lines[y+3][x+3]
+            score += int(s == "XMAS" || s == "SAMX")
+        }
+    }
+
+    // diag /
+    for x := 3; x < width; x++ {
+        for y := 0; y <= height-4; y++ {
+            s := ""+lines[y+0][x-0]+lines[y+1][x-1]+lines[y+2][x-2]+lines[y+3][x-3]
+            score += int(s == "XMAS" || s == "SAMX")
+        }
+    }
+
+    mas := 0
+
+    // mas
+    for x := 0; x <= width-3 ; x++ {
+        for y := 0; y <= height-3; y++ {
+            s1 := ""+lines[y+0][x+2]+lines[y+1][x+1]+lines[y+2][x+0]
+            s2 := ""+lines[y+0][x+0]+lines[y+1][x+1]+lines[y+2][x+2]
+            mas += int((s1 == "MAS" || s1 == "SAM") && (s2 == "MAS" || s2 == "SAM"))
+        }
+    }
+
+    printf("Part 1: %v\n", score)
+    printf("Part 2: %v\n", mas)
+}
