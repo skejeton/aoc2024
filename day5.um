@@ -37,6 +37,17 @@ fn findconns(mappings: []Mapping, i: int): []int {
     return c
 }
 
+fn ordering(mappings: map[Mapping]bool, a, b: int): int {
+    if validkey(mappings, {a, b}) {
+        return -1
+    }
+    if validkey(mappings, {b, a}) {
+        return 1
+    }
+
+    return 0
+}
+
 fn validatelvl(lvl: []int, mappings: []Mapping): bool {
     prev := 0
     for _, n in lvl {
@@ -59,39 +70,20 @@ fn validatelvl(lvl: []int, mappings: []Mapping): bool {
     return true
 }
 
-fn fixlvl(lvl: []int, mappings: []Mapping): []int {
-    prev := 0
-    for i, n in lvl {
-        conns := findconns(mappings, prev)
-        found := false
-
-        for _, conn in conns {
-            if conn == n {
-                found = true
-                break
-            }
-        }
-
-        if !found && prev != 0 {
-            lvl[i-1], lvl[i] = lvl[i], lvl[i-1]
-        } else {
-            prev = n
-        }
-    }
-
-    if !validatelvl(lvl, mappings) {
-        return fixlvl(lvl, mappings)
-    }
+fn fixlvl(lvl: []int, mappings: map[Mapping]bool): []int {
+    sort(lvl, |mappings| { return ordering(mappings, a^, b^) })
 
     return lvl
 }
 
 fn main() {
     mappings := []Mapping{}
+    mappymappings := map[Mapping]bool{}
     n1, n2 := 0, 0
 
     for scanf("%lld|%lld", &n1, &n2) == 2 {
         mappings = append(mappings, Mapping{n1, n2})
+        mappymappings[{n1, n2}] = true
     }
 
     levels := [][]int{}
@@ -125,7 +117,7 @@ fn main() {
 
     fixed := [][]int{}
     for i, level in invalids {
-        fixed = append(fixed, fixlvl(level, mappings))
+        fixed = append(fixed, fixlvl(level, mappymappings))
     }
 
     sum2 := 0
