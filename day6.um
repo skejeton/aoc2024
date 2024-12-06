@@ -1,0 +1,148 @@
+import "std.um"
+
+type Pos = struct {
+    x, y: int
+}
+
+var dirs: []Pos = {
+    { 0, -1},
+    { 1,  0},
+    { 0,  1},
+    {-1,  0}
+}
+
+type VisitLine = struct {
+    from: Pos
+    to: Pos
+}
+
+fn ray(player: Pos, dir: int, ylut, xlut: [][]Pos): VisitLine {
+    obs := Pos{-1, -1}
+    max := -1
+    min := 10000000
+
+    switch dir%4 {
+    case 0:
+        for _, i in xlut[player.x] {
+            if i.y < player.y && i.y > max {
+                max = i.y
+                obs = i
+            }
+        }
+
+        if obs.x == -1 { return {player, {-1, -1}} }
+        return {player, {obs.x, obs.y+1}}
+    case 1:
+
+        for _, i in ylut[player.y] {
+            if i.x > player.x && i.x < min {
+                min = i.x
+                obs = i
+            }
+        }
+
+        if obs.x == -1 { return {player, {-1, -1}} }
+        return {player, {obs.x-1, obs.y}}
+    case 2:
+        for _, i in xlut[player.x] {
+            if i.y > player.y && i.y < min {
+                min = i.y
+                obs = i
+            }
+        }
+
+        if obs.x == -1 { return {player, {-1, -1}} }
+        return {player, {obs.x, obs.y-1}}
+    case 3:
+        for _, i in ylut[player.y] {
+            if i.x < player.x && i.x > max {
+                max = i.x
+                obs = i
+            }
+        }
+
+        if obs.x == -1 { return {player, {-1, -1}} }
+        return {player, {obs.x+1, obs.y}}
+    }
+
+    return {player, {-1, -1}}
+}
+
+fn stuck(player: Pos, ylut, xlut: [][]Pos): bool {
+    dir := 0
+    visited := map[VisitLine]bool{}
+
+    for true {
+        line := ray(player, dir, ylut, xlut)
+        if line.to.x == -1 {
+            break
+        }
+
+        if visited[line] {
+            return true
+        }
+
+        visited[line] = true
+        player = line.to
+        dir++
+    }
+
+    return false
+}
+
+fn main() {
+    inp := []str{}
+
+    for line := ""; scanf("%s", &line) == 1 {
+        inp = append(inp, line)
+    }
+
+    w, h := len(inp[0]), len(inp)
+    obstacles := map[Pos]bool{}
+    visited := map[Pos]bool{}
+    player := Pos{0, 0}
+
+    for y in inp {
+        for x in inp[y] {
+            switch inp[y][x] {
+                case '#': obstacles[{x, y}] = true
+                case '^': player = {x, y}
+            }
+        }
+    }
+    
+    initplayer := player
+
+    i := 0
+    for player.x >= 0 && player.y >= 0 && player.x < w && player.y < h {
+        visited[player] = true
+        dir := dirs[i%4]
+        newpos := Pos{player.x+dir.x, player.y+dir.y}
+
+        if validkey(obstacles, newpos) {
+            i++
+        } else {
+            player = newpos
+        }
+    }
+
+    ylut := make([][]Pos, h)
+    xlut := make([][]Pos, w)
+    for o in obstacles { ylut[o.y] = append(ylut[o.y], o); xlut[o.x] = append(xlut[o.x], o) }
+
+    stucks := 0
+    for p in visited {
+        ox, oy := xlut[p.x], ylut[p.y]
+        ylut[p.y] = append(copy(ylut[p.y]), p)
+        xlut[p.x] = append(copy(xlut[p.x]), p)
+
+        if stuck(initplayer, ylut, xlut) {
+            stucks++
+        }
+
+        ylut[p.y] = oy
+        xlut[p.x] = ox
+    }
+
+    printf("Part 1: %v\nPart 2: %v\n", len(visited), stucks)
+}

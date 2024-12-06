@@ -1,0 +1,137 @@
+import "std.um"
+
+fn splitBy*(text: str, by: char): []str {
+  items := []str{}
+  last := 0
+  for i, c in text {
+    if c == by {
+      items = append(items, slice(text, last, i))
+      last = i+1 // Skip the character by adding one.
+    }
+  }
+  items = append(items, slice(text, last))
+  return items
+}
+
+type Mapping = struct {
+    from, to: int
+}
+
+fn findconns(mappings: []Mapping, i: int): []int {
+    c := []int{}
+
+    if i == 0 {
+        for _, m in mappings {
+            c = append(c, m.from)
+        }
+
+        return c
+    }
+
+    for _, m in mappings {
+        if m.from == i {
+            c = append(c, m.to)
+        }
+    }
+
+    return c
+}
+
+fn validatelvl(lvl: []int, mappings: []Mapping): bool {
+    prev := 0
+    for _, n in lvl {
+        conns := findconns(mappings, prev)
+        prev = n
+        found := false
+
+        for _, conn in conns {
+            if conn == n {
+                found = true
+                break
+            }
+        }
+
+        if !found {
+            return false
+        }
+    }
+
+    return true
+}
+
+fn fixlvl(lvl: []int, mappings: []Mapping): []int {
+    prev := 0
+    for i, n in lvl {
+        conns := findconns(mappings, prev)
+        found := false
+
+        for _, conn in conns {
+            if conn == n {
+                found = true
+                break
+            }
+        }
+
+        if !found && prev != 0 {
+            lvl[i-1], lvl[i] = lvl[i], lvl[i-1]
+        } else {
+            prev = n
+        }
+    }
+
+    if !validatelvl(lvl, mappings) {
+        return fixlvl(lvl, mappings)
+    }
+
+    return lvl
+}
+
+fn main() {
+    mappings := []Mapping{}
+    n1, n2 := 0, 0
+
+    for scanf("%lld|%lld", &n1, &n2) == 2 {
+        mappings = append(mappings, Mapping{n1, n2})
+    }
+
+    levels := [][]int{}
+
+    for line := ""; scanf("%s", &line) == 1 {
+        levels = append(levels, []int{})
+
+        nums := splitBy(line, ',')
+        for _, num in nums {
+            if num != "" {
+                levels[len(levels)-1] = append(levels[len(levels)-1], std::atoi(num))
+            }
+        }
+    }
+    levels[0] = append([]int{n1}, levels[0])
+
+    valids := [][]int{}
+    invalids := [][]int{}
+    for i, level in levels {
+        if validatelvl(level, mappings) {
+            valids = append(valids, level)
+        } else {
+            invalids = append(invalids, level)
+        }
+    }
+
+    sum1 := 0
+    for _, val in valids {
+        sum1 += val[len(val)/2]
+    }
+
+    fixed := [][]int{}
+    for i, level in invalids {
+        fixed = append(fixed, fixlvl(level, mappings))
+    }
+
+    sum2 := 0
+    for _, val in invalids {
+        sum2 += val[len(val)/2]
+    }
+
+    printf("Part 1: %v\nPart 2: %v\n", sum1, sum2)
+}
