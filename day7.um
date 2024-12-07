@@ -1,0 +1,85 @@
+import "std.um"
+
+type P = struct {
+    n: uint
+    a: []uint
+    b: []uint // bases
+}
+
+fn solve(p: ^P, num: uint, i: uint, part: int): bool {
+    if num == p.n && i == len(p.a) {
+        return true
+    }
+
+    if i >= len(p.a) {
+        return false
+    }
+
+    if num > p.n {
+        return false
+    }
+
+    if part == 2 {
+        return solve(p, num+p.a[i], i+1, part) ||
+               solve(p, num*p.a[i], i+1, part) ||
+               solve(p, num*p.b[i]+p.a[i], i+1, part)
+    }
+
+    return solve(p, num+p.a[i], i+1, part) ||
+           solve(p, num*p.a[i], i+1, part)
+}
+
+fn main() {
+    nums := []str{}
+    n := ""
+    for c := std::getchar(); c != '\0'; c = std::getchar() {
+        if c == ' ' || c == '\n' {
+            nums = append(nums, n)
+            n = ""
+        } else {
+            n += c
+        }
+    }
+    nums = append(nums, n)
+
+    arr := []uint{}
+    cur := 0
+    inp := []P{}
+
+    for _, num in nums {
+        if num[len(num)-1] == ":" {
+            if len(arr) > 0 {
+                inp = append(inp, P{n: cur, a: arr})
+            }
+            arr = {}
+            cur = std::atoi(num)
+        } else {
+            arr = append(arr, std::atoi(num))
+        }
+    }
+    if len(arr) > 0 {
+        inp = append(inp, P{n: cur, a: arr})
+    }
+
+    res1, res2 := 0, 0
+    for _, p in inp {
+        for _, n in p.a {
+            base := 1
+            for n > 0 {
+                base *= 10
+                n /= 10
+            }
+            p.b = append(p.b, base)
+        }
+
+        if solve(&p, p.a[0], 1, 1) {
+            res1 += p.n
+        }
+
+        if solve(&p, p.a[0], 1, 2) {
+            res2 += p.n
+        }
+    }
+
+    printf("%v %v\n", res1, res2)
+}
