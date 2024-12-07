@@ -31,16 +31,9 @@ fn solve(p: ^P, num: uint, i: uint, part: int): bool {
 
 fn main() {
     nums := []str{}
-    n := ""
-    for c := std::getchar(); c != '\0'; c = std::getchar() {
-        if c == ' ' || c == '\n' {
-            nums = append(nums, n)
-            n = ""
-        } else {
-            n += c
-        }
+    for p := ""; scanf("%s", &p) == 1 {
+        nums = append(nums, p)
     }
-    nums = append(nums, n)
 
     arr := []uint{}
     cur := 0
