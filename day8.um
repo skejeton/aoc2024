@@ -1,0 +1,77 @@
+import "std.um"
+
+type Pos = struct {
+    x, y: int
+}
+
+type Cluster = []Pos
+
+type Pair = [2]Pos
+
+fn filter(an: []Pos, w, h: int): []Pos {
+    f := map[Pos]bool{}
+
+    for _, s in an {
+        if s.x < 0 || s.y < 0 || s.x >= w || s.y >= h {
+            continue
+        }
+
+        f[s] = true
+    }
+
+    arr := []Pos{}
+
+    for s in f {
+        arr = append(arr, s)
+    }
+
+    return arr
+}
+
+fn main() {
+    m := []str{}
+    for p := ""; scanf("%s", &p) == 1 {
+        m = append(m, p)
+    }
+    w, h := len(m[0]), len(m)
+
+    cls := map[char]Cluster{}
+
+    for y, line in m {
+        for x in line {
+            if m[y][x] != '.' {
+                cls[m[y][x]] = append(cls[m[y][x]], Pos{x, y})
+            }
+        }
+    }
+
+    pairs := []Pair{}
+
+    for i, clus in cls {
+        for j, node1 in clus {
+            for k, node2 in clus {
+                if j == k { continue }
+                pairs = append(pairs, Pair{node1, node2})
+            }
+        }
+    }
+
+    an1 := []Pos{}
+    an2 := []Pos{}
+
+    for i, pair in pairs {
+        delta := Pos{pair[0].x-pair[1].x, pair[0].y-pair[1].y}
+        x, y := pair[0].x, pair[0].y
+
+        an1 = append(an1, Pos{x+delta.x, y+delta.y})
+        for x >= 0 && y >= 0 && x < w && y < h {
+            an2 = append(an2, Pos{x, y})
+            x, y = x+delta.x, y+delta.y
+        }
+    }
+
+    an1 = filter(an1, w, h)
+    an2 = filter(an2, w, h)
+
+    printf("Part 1: %v\nPart 2: %v", len(an1), len(an2))
+}
