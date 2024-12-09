@@ -1,0 +1,123 @@
+fn expand1(line: str): []int {
+    res := []int{}
+    sec := true
+    id := 0
+    for i, c in line {
+        if sec {
+            for i := 0; i < int(c)-int('0'); i++ {
+                res = append(res, id)
+            }
+            id++
+            sec = false
+        } else {
+            for i := 0; i < int(c)-int('0'); i++ {
+                res = append(res, -1)
+            }
+            sec = true
+        }
+    }
+
+    return res
+}
+
+type P = struct {
+    used: bool
+    l: int
+    id: int
+}
+
+fn expand2(line: str): []P {
+    res := []P{}
+    sec := true
+    id := 0
+    for i, c in line {
+        if sec {
+            res = append(res, P{true, int(c)-int('0'), id})
+            id++
+            sec = false
+        } else {
+            res = append(res, P{false, int(c)-int('0'), 0})
+            sec = true
+        }
+    }
+
+    return res
+}
+
+fn findused(ex: []P, ii: int, l: int): int {
+    for i := len(ex)-1; i > ii; i-- {
+        if ex[i].used && ex[i].l <= l {
+            return i
+        }
+    }
+
+    return -1
+}
+
+fn main() {
+    line := ""
+    scanf("%s", &line)
+    expanded := expand1(line)
+
+    i, j := 0, len(expanded)-1
+    for true {
+        for expanded[j] == -1 {
+            j--
+        }
+        for expanded[i] != -1 {
+            i++
+        }
+        if i >= j {
+            break
+        }
+
+        expanded[i] = expanded[j]
+        expanded[j] = -1
+    }
+
+    res := 0
+
+    for i, v in expanded {
+        if v == -1 {
+            break
+        }
+
+        res += i*v
+    }
+
+    printf("Part 1: %v\n", res)
+
+    expanded2 := expand2(line)
+
+    for i := 0; i < len(expanded2); i++ {
+        v := expanded2[i]
+        if !v.used {
+            best := findused(expanded2, i, v.l)
+
+            if best != -1 {
+                diff := v.l-expanded2[best].l
+                expanded2[i] = expanded2[best]
+                expanded2[best].used = false
+
+                if expanded2[best].l < v.l {
+                    expanded2 = insert(expanded2, i+1, P{l: diff, used: false})
+                }
+            }
+        }
+    }
+
+    p := 0
+    res2 := 0
+    for i, v in expanded2 { 
+        if v.used {
+            for i := 0; i < v.l; i++ {
+                res2 += p*v.id
+                p++
+            }
+        } else {
+            p += v.l
+        }
+    }
+    
+    printf("Part 2: %v\n", res2)
+}
