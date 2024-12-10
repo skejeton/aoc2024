@@ -1,0 +1,102 @@
+type Pos = struct {
+    x, y: int
+}
+
+type Path = struct {
+    l: []Pos
+}
+
+type Paths = []Path
+
+fn get(m: []str, w, h, x, y: int): int {
+    if x < 0 || y < 0 || x >= w || y >= h {
+        return -1
+    }
+
+    if m[y][x] == '.' {
+        return -1
+    }
+
+    return int(m[y][x])-int('0')
+}
+
+fn iter(paths: Paths, m: []str, w, h: int): (Paths, bool) {
+    newpaths := Paths{}
+    change := false
+
+    for i, path in paths {
+        lastn := len(path.l)-1
+        last := path.l[lastn]
+
+        points := []Pos{}
+
+        if get(m, w, h, last.x+1, last.y) == lastn+1 {
+            points = append(points, Pos{last.x+1, last.y})
+        }
+        if get(m, w, h, last.x-1, last.y) == lastn+1 {
+            points = append(points, Pos{last.x-1, last.y})
+        }
+        if get(m, w, h, last.x, last.y+1) == lastn+1 {
+            points = append(points, Pos{last.x, last.y+1})
+        }
+        if get(m, w, h, last.x, last.y-1) == lastn+1 {
+            points = append(points, Pos{last.x, last.y-1})
+        }
+
+        if len(points) > 0 {
+            change = true
+            for i := 1; i < len(points); i++ {
+                newpaths = append(newpaths, Path{l: append(copy(path.l), points[i])})
+            }
+
+            paths[i].l = append(paths[i].l, points[0])
+        }
+    }
+
+    paths = append(paths, newpaths)
+
+    return paths, change
+}
+
+fn main() {
+    m := []str{}
+    for p := ""; scanf("%s", &p) == 1 {
+        m = append(m, p)
+    }
+    w, h := len(m[0]), len(m)
+
+    trailheads := map[Pos]bool{}
+
+    for y in m {
+        for x in m[y] {
+            if m[y][x] == '0' {
+                trailheads[{x, y}] = true
+            }
+        }
+    }
+
+    all := 0
+    same := 0
+    for head in trailheads {
+        paths := Paths{{{head}}}
+        for true {
+            np, ok := iter(paths, m, w, h)
+            if !ok { break }
+            paths = np
+        }
+
+        set := map[Pos]bool{}
+        for _, p in paths {
+            if len(p.l) == 10 {
+                all++
+            }
+            if len(p.l) == 10 && !set[p.l[len(p.l)-1]] {
+                set[p.l[len(p.l)-1]] = true
+                same++
+            }
+        }
+    }
+
+    printf("Part 1: %v\n", same)
+    printf("Part 2: %v\n", all)
+}
