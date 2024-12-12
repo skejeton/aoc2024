@@ -1,0 +1,100 @@
+type Metrics = struct {
+    a, p, s: int
+}
+
+type Pos = struct {
+    x, y: int
+}
+
+type Island = struct {
+    c: char
+    m: Metrics
+}
+
+fn getat(shape: []str, x, y: int): char {
+    if x < 0 || y < 0 || x >= len(shape[0]) || y >= len(shape) {
+        return '\0'
+    }
+
+    return shape[y][x]
+}
+
+fn imetrics(shape: []str, x, y: int, isl: ^map[Pos]bool): Metrics {
+    if isl[{x, y}] {
+        return {}
+    }
+    isl[{x, y}] = true
+
+    ch := getat(shape, x, y)
+    ns := []Pos{{x+1, y}, {x-1, y}, {x, y+1}, {x, y-1}}
+    chk := [][2]Pos{
+        {{x, y+1}, {x+1, y+1}},
+        {{x, y+1}, {x-1, y+1}},
+        {{x-1, y}, {x-1, y+1}},
+        {{x-1, y}, {x-1, y-1}}
+    }
+    m := Metrics{}
+    m.a = 1
+    for i, n in ns {
+        c := getat(shape, n.x, n.y)
+        if c != ch {
+            m.p++
+            m.s++
+
+            at1 := getat(shape, chk[i][0].x, chk[i][0].y)
+            at2 := getat(shape, chk[i][1].x, chk[i][1].y)
+
+            if at1 == ch && at2 != ch {
+                m.s--
+            }
+        } else {
+            nm := imetrics(shape, n.x, n.y, isl)
+            m.p += nm.p
+            m.a += nm.a
+            m.s += nm.s
+        }
+    }
+
+    return m
+}
+
+fn metrics(shape: []str): []Island {
+    islands := []Island{}
+    marker := map[Pos]bool{}
+
+    for y in shape {
+        for x in shape[y] {
+            if marker[{x, y}] {
+                continue
+            }
+
+            isl := map[Pos]bool{}
+            lm := imetrics(shape, x, y, &isl)
+            islands = append(islands, Island{shape[y][x], lm})
+
+            for p, v in isl {
+                marker[p] = v
+            }
+        }
+    }
+
+    return islands
+}
+
+fn main() {
+    inp := []str{}
+
+    for line := ""; scanf("%s", &line) == 1 {
+        inp = append(inp, line)
+    }
+
+    met := metrics(inp)
+
+    p1, p2 := 0, 0
+    for _, is in met {
+        p1 += is.m.p*is.m.a
+        p2 += is.m.s*is.m.a
+    }
+
+    printf("Part 1: %v\nPart 2: %v\n", p1, p2)
+}
