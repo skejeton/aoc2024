@@ -1,0 +1,30 @@
+fn do(a, b, p: [2]int): int {
+    c := [2]int{
+        (p[0]*b[1] - p[1]*b[0])/(a[0]*b[1] - a[1]*b[0]),
+        (p[0]*a[1] - p[1]*a[0])/(b[0]*a[1] - b[1]*a[0])
+    }
+
+    if p[0] == c[0]*a[0]+c[1]*b[0] && p[1] == c[0]*a[1]+c[1]*b[1] {
+        return c[0]*3+c[1]
+    }
+
+    return -1
+}
+
+fn main() {
+    p1, p2 := 0, 0
+    for true {
+        var a, b, p: [2]int
+
+        if scanf("Button A: X+%lld, Y+%lld\n", &a[0], &a[1]) == 2 &&
+           scanf("Button B: X+%lld, Y+%lld\n", &b[0], &b[1]) == 2 &&
+           scanf("Prize: X=%lld, Y=%lld\n", &p[0], &p[1]) == 2 {
+            r1, r2 := do(a, b, p), do(a, b, {p[0]+10000000000000, p[1]+10000000000000})
+            if r1 != -1 { p1 += r1 }
+            if r2 != -1 { p2 += r2 }
+        } else {
+            break
+        }
+    }
+    printf("Part 1: %v\nPart 2: %v\n", p1, p2)
+}
