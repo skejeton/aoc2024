@@ -1,0 +1,77 @@
+type Pos = struct {
+    x, y: int
+}
+
+type Robot = struct {
+    p, v: Pos
+}
+
+fn mod(a, b: int): int {
+    r := a % b
+    return r < 0 ? r + b : r
+}
+
+fn iters(robots: []Robot, c, w, h: int) {
+    for i, robot^ in robots {
+        robot.p.x = mod(robot.p.x+robot.v.x*c, w)
+        robot.p.y = mod(robot.p.y+robot.v.y*c, h)
+    }
+}
+
+fn robotcounts(robots: []Robot): map[Pos]int {
+    m := map[Pos]int{}
+    for i, robot in robots {
+        m[robot.p]++
+    }
+    return m
+}
+
+fn main() {
+    robots := []Robot{}
+
+    for robot := Robot{}; scanf("p=%lld,%lld v=%lld,%lld\n", &robot.p.x, &robot.p.y, &robot.v.x, &robot.v.y) == 4 {
+        robots = append(robots, robot)
+    }
+
+    w, h := 101, 103
+    if len(robots) < 100 {
+        w, h := 11, 7   
+    }
+    mx, my := w/2, h/2
+
+    iters(robots, 100, w, h)
+    counts := robotcounts(robots)
+    q := [4]int{0, 0, 0, 0}
+    for y := 0; y < h; y++ {
+        for x := 0; x < w; x++ {
+            if x == mx || y == my {
+                continue
+            }
+
+            q[x/(mx+1)+y/(my+1)*2] += counts[{x, y}]
+        }
+    }
+
+    printf("Part 1: %v\n", q[0]*q[1]*q[2]*q[3])
+
+    it := 100
+    for true {
+        iters(robots, 1, w, h)
+        counts := robotcounts(robots)
+        it++
+
+        fail := false
+        for i, c in counts {
+            if c > 1 {
+                fail = true
+                break
+            }
+        }
+
+        if !fail {
+            break
+        }
+    }
+    
+    printf("Part 2: %v\n", it)
+}
