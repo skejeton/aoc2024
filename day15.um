@@ -1,0 +1,187 @@
+import "std.um"
+
+fn getline(): str {
+    line := ""
+    for true {
+        c := std::getchar()
+        if c == '\n' || c == '\0' {
+            break
+        } 
+        if c == '\r' {
+            continue
+        }
+        line += c
+    }
+    return line
+}
+
+type Pos = struct {
+    x, y: int
+}
+
+fn canMove(world: map[Pos]char, obj: Pos, dir: Pos): bool {
+    target := Pos{obj.x+dir.x, obj.y+dir.y}
+    v := world[obj]
+
+    halves := []Pos{}
+    if world[target] == '[' {
+        halves = {Pos{target.x, target.y}, Pos{target.x+1, target.y}}
+    }
+    if world[target] == ']' {
+        halves = {Pos{target.x-1, target.y}, Pos{target.x, target.y}}
+    }
+
+    if len(halves) == 2 {
+        if canMove(world, halves[0], dir) && canMove(world, halves[1], dir) {
+            return true
+        }
+        return false
+    }
+
+    if world[target] == '#' {
+        return false
+    }
+
+    return true
+}
+
+fn moveObject(world: map[Pos]char, obj: Pos, dir: Pos): bool {
+    target := Pos{obj.x+dir.x, obj.y+dir.y}
+    v := world[obj]
+
+    if world[target] == 'O' {
+        if moveObject(world, target, dir) {
+            delete(world, obj)
+            world[target] = v
+            return true
+        }
+        return false
+    }
+
+    if dir.y == 0 {
+        if world[target] == '[' || world[target] == ']' {
+            if moveObject(world, target, dir) {
+                delete(world, obj)
+                world[target] = v
+                return true
+            }
+            return false
+        }
+    } else {
+        halves := []Pos{}
+        if world[target] == '[' {
+            halves = {Pos{target.x, target.y}, Pos{target.x+1, target.y}}
+        }
+        if world[target] == ']' {
+            halves = {Pos{target.x-1, target.y}, Pos{target.x, target.y}}
+        }
+
+        if len(halves) == 2 {
+            if canMove(world, halves[0], dir) && canMove(world, halves[1], dir) {
+                moveObject(world, halves[0], dir)
+                moveObject(world, halves[1], dir)
+                delete(world, obj)
+                world[target] = v
+                return true
+            }
+            return false
+        }
+    }
+
+    if world[target] == '#' {
+        return false
+    }
+
+    delete(world, obj)
+    world[target] = v
+
+    return true
+}
+
+fn getDir(c: char): Pos {
+    if c == '^' {
+        return {0, -1}
+    }
+    if c == '>' {
+        return {1, 0}
+    }
+    if c == 'v' {
+        return {0, 1}
+    }
+    if c == '<' {
+        return {-1, 0}
+    }
+    exit(1)
+    return {0, 0}
+}
+
+fn main() {
+    m := []str{}
+    moves := ""
+
+    for l := getline(); l != ""; l = getline() {
+        m = append(m, l)
+    }
+
+    for l := getline(); l != ""; l = getline() {
+        moves += l
+    }
+
+    world1 := map[Pos]char{}
+    world2 := map[Pos]char{}
+    player1 := Pos{0, 0}
+    player2 := Pos{0, 0}
+
+    for y, line in m {
+        for x, c in line {
+            if c == '#' || c == 'O' || c == '@' {
+                world1[{x, y}] = c
+                if c == '@' {
+                    player1 = {x, y}
+                }   
+            } 
+            if c == '#' {
+                world2[{x*2, y}] = '#'
+                world2[{x*2+1, y}] = '#'
+            }
+            if c == 'O' {
+                world2[{x*2, y}] = '['
+                world2[{x*2+1, y}] = ']'
+            }
+            if c == '@' {
+                world2[{x*2, y}] = '@'
+                world2[{x*2+1, y}] = '.'
+                player2 = {x*2, y}
+            }
+        }
+    }
+
+    for i, move in moves {
+        dir := getDir(move)
+        if moveObject(world1, player1, dir) {
+            player1.x += dir.x
+            player1.y += dir.y
+        }
+
+        if moveObject(world2, player2, dir) {
+            player2.x += dir.x
+            player2.y += dir.y
+        }
+    }
+
+    p1, p2 := 0, 0
+    
+    for p, c in world1 {
+        if c == 'O' {
+            p1 += p.x+p.y*100
+        }
+    }
+
+    for p, c in world2 {
+        if c == '[' {
+            p2 += p.x+p.y*100
+        }
+    }
+
+    printf("Part 1: %v\nPart 2: %v\n", p1, p2)
+}
