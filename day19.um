@@ -79,8 +79,6 @@ fn main() {
         samples = append(samples, sample)
     }
 
-    sort(rules, { return len(b^) - len(a^) })
-
     rulemap := map[str]bool{}
     maxl := 0
     for i, rule in rules {
