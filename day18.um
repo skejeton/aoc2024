@@ -1,0 +1,124 @@
+type Pos = struct {
+    x, y: int
+}
+
+type Prio = struct {
+    pos: Pos
+    prio: int
+}
+
+type PrioQueue = []Prio
+
+fn (q: ^PrioQueue) len(): int {
+    return len(q^)
+}
+
+fn (q: ^PrioQueue) dequeue(): (Pos, int) {
+    e := q[0]
+    q ^= delete(q^, 0)
+    return e.pos, e.prio
+}
+
+fn (q: ^PrioQueue) enqueue(pos: Pos, prio: int) {
+    for i, e in q {
+        if e.prio >= prio {
+            q ^= insert(q^, i, Prio{pos, prio})
+            return
+        }
+    }
+    
+    q ^= append(q^, Prio{pos, prio})
+}
+
+fn posmove(pos: Pos): [4]Pos {
+    return {
+        {pos.x + 1, pos.y},
+        {pos.x - 1, pos.y},
+        {pos.x, pos.y + 1},
+        {pos.x, pos.y - 1}
+    }
+}
+
+fn istaken(m: map[Pos]bool, w, h: int, pos: Pos): bool {
+    if pos.x < 0 || pos.x > w || pos.y < 0 || pos.y > h {
+        return true
+    }
+
+    return m[pos]
+}
+
+fn dijkstra(m: map[Pos]bool, w, h: int, start: Pos, end: Pos, dbg: bool = false): int {
+    queue := PrioQueue{}
+    queue.enqueue(start, 0)
+    visited := map[Pos]int{}
+
+    for queue.len() > 0 {
+        pos, cost := queue.dequeue()
+        moves := posmove(pos)
+
+        if pos.x == end.x && pos.y == end.y {
+            break
+        }
+
+        for _, newPos in moves {
+            newCost := cost+1
+
+            if istaken(m, w, h, newPos) {
+                continue
+            }
+
+            if !validkey(visited, newPos) || newCost < visited[newPos] {
+                visited[newPos] = newCost
+                queue.enqueue(newPos, newCost)
+            }
+        }
+    }
+
+    return visited[end]
+}
+
+fn simulate(hist: []Pos, iter: int, w, h: int): int {
+    mp := map[Pos]bool{}
+    for i, p in hist {
+        if i == iter {
+            break
+        }
+        mp[p] = true
+    }
+
+    return dijkstra(mp, w, h, Pos{w, h}, Pos{0, 0})
+}
+
+fn binsearch(hist: []Pos, min, max, w, h: int): int {
+    for min != max {
+        iter := (min + max) / 2
+        sim := simulate(hist, iter, w, h)
+        if sim == 0 {
+            max = iter
+        } else {
+            min = iter+1
+        }
+    }
+
+    return min-1
+}
+
+fn main() {
+    hist := []Pos{}
+    for p := Pos{}; scanf("%lld,%lld", &p.x, &p.y) == 2 {
+        hist = append(hist, p)
+    }
+    
+    p1, p2 := 0, Pos{0, 0}
+
+    if len(hist) < 1024 {
+        p1 = simulate(hist, 12, 6, 6)
+        p2 = hist[binsearch(hist, 12, len(hist), 6, 6)]
+    } else {
+        p1 = simulate(hist, 1024, 70, 70)
+        p2 = hist[binsearch(hist, 1024, len(hist), 70, 70)]
+    }
+
+    printf("Part 1: %d\n", p1)
+    printf("Part 2: %d,%d\n", p2.x, p2.y)
+}

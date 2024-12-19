@@ -1,0 +1,198 @@
+type Pos = struct {
+    x, y: int
+}
+
+fn get(m: []str, p: Pos): char {
+    if p.x < 0 || p.x >= len(m[0]) || p.y < 0 || p.y >= len(m) {
+        return '#'
+    }
+
+    return m[p.y][p.x]
+}
+
+type Edge = struct {
+    p: Pos
+    d: Pos
+}
+
+type Prio = struct {
+    edge: Edge
+    prio: int
+}
+
+type PrioQueue = []Prio
+
+fn (q: ^PrioQueue) len(): int {
+    return len(q^)
+}
+
+fn (q: ^PrioQueue) dequeue(): (Edge, int) {
+    e := q[0]
+    q ^= delete(q^, 0)
+    return e.edge, e.prio
+}
+
+fn (q: ^PrioQueue) enqueue(edge: Edge, prio: int) {
+    for i, e in q {
+        if e.prio > prio {
+            q ^= insert(q^, i, Prio{edge, prio})
+            return
+        }
+    }
+    
+    q ^= append(q^, Prio{edge, prio})
+}
+
+type Move = struct {
+    c: int
+    t: Edge
+}
+
+fn edgemove(edge: Edge, cost: int): [3]Move {
+    to, dir := edge.p, edge.d
+
+    return {
+        {cost+1, {{to.x + dir.x, to.y + dir.y}, dir}},
+        {cost+1001, {{to.x + dir.y, to.y + dir.x}, {dir.y, dir.x}}},
+        {cost+1001, {{to.x + -dir.y, to.y + -dir.x}, {-dir.y, -dir.x}}}
+    }
+}
+
+fn anyof(visited: map[Edge]int, pos: Pos): int {
+    for _, dir in [4]Pos{{1, 0}, {-1, 0}, {0, 1}, {0, -1}} {
+        if validkey(visited, Edge{pos, dir}) {
+            return visited[Edge{pos, dir}]
+        }
+    }
+    return -1
+}
+
+fn alledges(pos: Pos): []Edge {
+    edges := []Edge{}
+    for _, dir in []Pos{{1, 0}, {-1, 0}, {0, 1}, {0, -1}} {
+        edges = append(edges, Edge{pos, dir})
+    }
+    return edges
+}
+
+fn dijkstra(m: []str, start: Pos, end: Pos, dbg: bool = false): (map[Edge][]Edge, int) {
+    queue := PrioQueue{}
+    queue.enqueue(Edge{start, {1, 0}}, 0)
+    visited := map[Edge]int{}
+    bt := map[Edge][]Edge{}
+    transitions := map[[2]Edge]bool{}
+
+    for queue.len() > 0 {
+        edge, cost := queue.dequeue()
+        moves := edgemove(edge, cost)
+
+        if edge.p.x == end.x && edge.p.y == end.y {
+            break
+        }
+
+        for _, move in moves {
+            newPos := move.t.p
+            newEdge := move.t
+            newCost := move.c
+
+            if get(m, newPos) == '#' {
+                continue
+            }
+
+            if (!validkey(visited, newEdge) || newCost <= visited[newEdge]) && !validkey(transitions, {edge, newEdge}) {
+                visited[newEdge] = newCost
+                transitions[{edge, newEdge}] = true
+                bt[newEdge] = append(bt[newEdge], edge)
+                queue.enqueue(newEdge, newCost)
+            }
+        }
+    }
+
+    return bt, anyof(visited, end)
+}
+
+fn untrace(mp: map[Edge]bool, trace: map[Edge][]Edge, edge: Edge) {
+    if validkey(mp, edge) {
+        return
+    }
+
+    mp[edge] = true
+
+    for _, edge in trace[edge] {
+        untrace(mp, trace, edge)
+    }
+}
+
+fn part2(bt: map[Edge][]Edge, cost: int, start: Pos, end: Pos): (map[Pos]bool, int) {
+    mp := map[Edge]bool{}
+
+    edges := alledges(end)
+    for _, edge in edges {
+        untrace(mp, bt, edge)
+    }
+
+    mp2 := map[Pos]bool{}
+    for k, v in mp {
+        mp2[k.p] = v
+    }
+    
+    return mp2, len(mp2)
+}
+
+fn main() {
+    m := []str{}
+
+    for l := ""; scanf("%s", &l) == 1 {
+        m = append(m, l)
+    }
+
+    start, end := Pos{0, 0}, Pos{0, 0}
+
+    for i, l in m {
+        for j, c in l {
+            if c == 'S' {
+                start = Pos{j, i}
+            }
+            if c == 'E' {
+                end = Pos{j, i}
+            }
+        }
+    }
+
+    bt, p1 := dijkstra(m, start, end)
+    mp, p2 := part2(bt, p1, start, end)
+
+    w := len(m[0])
+    lw := ceil(log(w)/log(10))
+
+    printf("\n")
+    for k := 0; k < lw; k++ {
+        digit := trunc(exp(log(10)*(lw-k-1)))
+        printf("    ")
+
+        for i := 0; i < w; i++ {
+            if digit > i && digit != 1 {
+                printf(" ")
+            } else {
+                printf("%d", i/digit%10)
+            }
+        }
+        printf("\n")
+    }
+    printf("\n")
+
+    for i, l in m {
+        printf("%3d ", i)
+
+        for j, c in l {
+            if validkey(mp, {j, i}) {
+                c = 'O'
+            }
+            printf("%c", c)
+        } 
+        printf("\n")
+    }
+
+    printf("Part 1: %d\n", p1)
+    printf("Part 2: %d\n", p2)
+}

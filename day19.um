@@ -1,0 +1,103 @@
+import "std.um"
+
+fn getline(): str {
+    line := ""
+    for true {
+        c := std::getchar()
+        if c == '\n' || c == '\0' {
+            break
+        } 
+        if c == '\r' {
+            continue
+        }
+        line += c
+    }
+    return line
+}
+
+fn splitBy*(text: str, by: char): []str {
+  items := []str{}
+  last := 0
+  for i, c in text {
+    if c == by {
+      items = append(items, slice(text, last, i))
+      last = i+1 // Skip the character by adding one.
+    }
+  }
+  items = append(items, slice(text, last))
+  return items
+}
+
+fn startswith*(text: str, prefix: str): bool {
+    if len(text) < len(prefix) {
+        return false
+    }
+    
+    return slice(text, 0, len(prefix)) == prefix
+}
+
+var cache: map[str]int
+
+fn try(sample: str, rules: map[str]bool, maxl: int): int {
+    count := 0
+
+    if validkey(cache, sample) {
+        return cache[sample]
+    }
+
+    for l := maxl; l > 0; l-- {
+        if len(sample) < l {
+            continue
+        }
+
+        if validkey(rules, slice(sample, 0, l)) {
+            count += try(slice(sample, l), rules, maxl)
+        }
+    }
+
+    if len(sample) == 0 {
+        count++
+    }
+
+    cache[sample] = count
+    return count
+}
+
+fn main() {
+    rules:= []str{}
+    samples := []str{}
+
+    ruleline := splitBy(getline(), ',')
+    for i in ruleline {
+        rule := ""
+        if sscanf(ruleline[i], "%s", &rule) == 1 {
+            rules = append(rules, rule)
+        }
+    }
+
+    for sample := ""; scanf("%s", &sample) == 1 {
+        samples = append(samples, sample)
+    }
+
+    sort(rules, { return len(b^) - len(a^) })
+
+    rulemap := map[str]bool{}
+    maxl := 0
+    for i, rule in rules {
+        rulemap[rule] = true
+        if len(rule) > maxl {
+            maxl = len(rule)
+        }
+    }
+
+    part1 := 0
+    part2 := 0
+
+    for i, sample in samples {
+        count := try(sample, rulemap, maxl)
+        part1 += int(count > 0)
+        part2 += count
+    }
+
+    printf("Part 1: %v\nPart 2: %v\n", part1, part2)
+}
