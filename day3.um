@@ -5,45 +5,60 @@ type Instr = struct {
     args: []int
 }
 
-fn tryparsenum(s: str): (int, int) {
+type Parser = struct {
+    s: str
+    i: int
+}
+
+fn (p: ^Parser) peek(): char {
+    if p.i >= len(p.s) {
+        return '\0'
+    }
+    return p.s[p.i]
+}
+
+fn (p: ^Parser) try(s: str): bool {
+    init := p.i
     for i, c in s {
-        if c < '0' || c > '9' {
-            return std::atoi(slice(s, 0, i)), i
+        if p.peek() != c {
+            p.i = init
+            return false
         }
+
+        p.i++
     }
 
-    return 0, 0
+    return true
 }
 
-fn startswith(s: str, prefix: str): bool {
-    return len(s) >= len(prefix) && slice(s, 0, len(prefix)) == prefix
+fn (p: ^Parser) parsenum(): (int, bool) {
+    num := 0
+    ok := false
+    for p.peek() >= '0' && p.peek() <= '9' {
+        num = num*10 + int(int(p.peek()) - int('0'))
+        p.i++
+        ok = true
+    }
+
+    return num, ok
 }
 
-fn tryparse(s: str): (Instr, bool) {
-    if startswith(s, "mul(") {
-        s = slice(s, 4)
-        num, i := tryparsenum(s)
-        if i == 0 {
-            return {}, false
-        }
-        s = slice(s, i)
-        if s[0] != ',' {
-            return {}, false
-        }
-        s = slice(s, 1)
-        num2, i := tryparsenum(s)
-        if i == 0 {
-            return {}, false
-        }
-        s = slice(s, i)
-        if s[0] != ')' {
-            return {}, false
-        }
-        
+fn tryparse(p: ^Parser): (Instr, bool) {
+    if p.try("mul(") {
+        num, ok := p.parsenum()
+        if !ok { return {}, false }
+        if p.peek() != ',' { return {}, false }
+        p.i++
+
+        num2, ok := p.parsenum()
+        if !ok { return {}, false }
+        if p.peek() != ')' { return {}, false }
+        p.i++
+
         return {op: "mul", args: {num, num2}}, true
-    } else if startswith(s, "don't()") {
+    } else if p.try("don't()") {
         return {op: "don't"}, true
-    } else if startswith(s, "do()") {
+    } else if p.try("do()") {
         return {op: "do"}, true
     }
 
@@ -58,12 +73,13 @@ fn main() {
     }
 
     instrs := []Instr{}
-
-    for i := 0; i < len(data); i++ {
-        s := slice(data, i)
-        instr, ok := tryparse(s)
+    parser := Parser{data, 0}
+    for parser.peek() != '\0' {
+        instr, ok := tryparse(&parser)
         if ok {
             instrs = append(instrs, instr)
+        } else {
+            parser.i++
         }
     }
 

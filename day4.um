@@ -1,5 +1,33 @@
 import "std.um"
 
+fn check1(m: []str, x, y, dx, dy: int): int {
+    if m[y][x] == 'S' {
+        a := m[y+dy][x+dx]
+        b := m[y+dy*2][x+dx*2]
+        c := m[y+dy*3][x+dx*3]
+        return int(a == 'A' && b == 'M' && c == 'X')
+    } else if m[y][x] == 'X' {
+        a := m[y+dy][x+dx]
+        b := m[y+dy*2][x+dx*2]
+        c := m[y+dy*3][x+dx*3]
+        return int(a == 'M' && b == 'A' && c == 'S')
+    }
+    return 0
+}
+
+fn check2(m: []str, x, y: int): int {
+    if m[y][x] == 'A' {
+        a := m[y+1][x+1]
+        b := m[y-1][x-1]
+        c := m[y-1][x+1]
+        d := m[y+1][x-1]
+        return int(
+            ((a == 'M' && b == 'S') || (b == 'M' && a == 'S')) &&
+            ((c == 'M' && d == 'S') || (d == 'M' && c == 'S')))
+    } 
+    return 0
+}
+
 fn main() {
     lines := []str{}
 
@@ -14,43 +42,37 @@ fn main() {
     // hor
     for x := 0; x <= width-4; x++ {
         for y := 0; y < height; y++ {
-            s := ""+lines[y][x+0]+lines[y][x+1]+lines[y][x+2]+lines[y][x+3]
-            score += int(s == "XMAS" || s == "SAMX")
+            score += check1(lines, x, y, 1, 0)
         }
     }
 
     // ver
     for x := 0; x < width; x++ {
         for y := 0; y <= height-4; y++ {
-            s := ""+lines[y+0][x]+lines[y+1][x]+lines[y+2][x]+lines[y+3][x]
-            score += int(s == "XMAS" || s == "SAMX")
+            score += check1(lines, x, y, 0, 1)
         }
     }
 
     // diag \
     for x := 0; x <= width-4; x++ {
         for y := 0; y <= height-4; y++ {
-            s := ""+lines[y+0][x+0]+lines[y+1][x+1]+lines[y+2][x+2]+lines[y+3][x+3]
-            score += int(s == "XMAS" || s == "SAMX")
+            score += check1(lines, x, y, 1, 1)
         }
     }
 
     // diag /
     for x := 3; x < width; x++ {
         for y := 0; y <= height-4; y++ {
-            s := ""+lines[y+0][x-0]+lines[y+1][x-1]+lines[y+2][x-2]+lines[y+3][x-3]
-            score += int(s == "XMAS" || s == "SAMX")
+            score += check1(lines, x, y, -1, 1)
         }
     }
 
     mas := 0
 
     // mas
-    for x := 0; x <= width-3 ; x++ {
-        for y := 0; y <= height-3; y++ {
-            s1 := ""+lines[y+0][x+2]+lines[y+1][x+1]+lines[y+2][x+0]
-            s2 := ""+lines[y+0][x+0]+lines[y+1][x+1]+lines[y+2][x+2]
-            mas += int((s1 == "MAS" || s1 == "SAM") && (s2 == "MAS" || s2 == "SAM"))
+    for x := 1; x <= width-2; x++ {
+        for y := 1; y <= height-2; y++ {
+            mas += check2(lines, x, y)
         }
     }
 

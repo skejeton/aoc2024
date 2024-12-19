@@ -18,8 +18,6 @@ fn variations(level: []int): [][]int {
     for i := 0; i < len(level); i++ {
         variations = append(variations, delete(copy(level), i))
     }
-    printf("src: %v\n", level)
-    printf("variations: %v\n", variations)
     return variations
 }
 
