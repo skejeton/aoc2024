@@ -47,7 +47,7 @@ fn istaken(m: map[Pos]bool, w, h: int, pos: Pos): bool {
     return m[pos]
 }
 
-fn dijkstra(m: map[Pos]bool, w, h: int, start: Pos, end: Pos, dbg: bool = false): int {
+fn dijkstra(m: map[Pos]bool, w, h: int, start: Pos, end: Pos): int {
     queue := PrioQueue{}
     queue.enqueue(start, 0)
     visited := map[Pos]int{}

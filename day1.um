@@ -15,7 +15,7 @@ fn main() {
     sum := 0
     counts := map[int]int{}
     for i in a {
-        sum += trunc(fabs(b[i] - a[i]))
+        sum += abs(b[i] - a[i])
         counts[b[i]]++
     }
     printf("Part 1: %d %gs\n", sum, std::clock() - t)

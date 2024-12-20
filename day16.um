@@ -75,7 +75,7 @@ fn alledges(pos: Pos): []Edge {
     return edges
 }
 
-fn dijkstra(m: []str, start: Pos, end: Pos, dbg: bool = false): (map[Edge][]Edge, int) {
+fn dijkstra(m: []str, start: Pos, end: Pos): (map[Edge][]Edge, int) {
     queue := PrioQueue{}
     queue.enqueue(Edge{start, {1, 0}}, 0)
     visited := map[Edge]int{}

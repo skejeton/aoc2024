@@ -29,7 +29,7 @@ fn isvalid(level: []int): bool {
         if last == -1 {
             last = v
         } else {
-            if fabs(v - last) > 3 {
+            if abs(v - last) > 3 {
                 return false
             }
 
